@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/FFmpegPlayer.iml" filepath="$PROJECT_DIR$/FFmpegPlayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/FunCore/FunCore.iml" filepath="$PROJECT_DIR$/FunCore/FunCore.iml" />
+      <module fileurl="file://$PROJECT_DIR$/FunPlayer/FunPlayer.iml" filepath="$PROJECT_DIR$/FunPlayer/FunPlayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+    </modules>
+  </component>
+</project>

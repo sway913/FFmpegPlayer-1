@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">MediaCore</string>
+
+    <string name="album_name_all">系统相册</string>
+    <string name="album_empty">没有图片/视频</string>
+    <string name="preview_btn_edit">编辑</string>
+
+    <!-- 返回操作 -->
+    <string name="back_pressed_message">退出当前操作?</string>
+    <!--权限请求-->
+    <string name="request_camera_permission">需要相机权限</string>
+    <string name="request_storage_permission">需要存储权限</string>
+    <string name="request_sound_permission">需要录音权限</string>
+
+</resources>

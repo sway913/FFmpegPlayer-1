@@ -11,13 +11,13 @@ else ()
 endif (${ANDROID_PLATFORM_LEVEL} LESS 11)
 
 # 添加 soundtouch 动态库
-set(soundtouch_dir ../sound)
-add_subdirectory(${soundtouch_dir} soundtouch)
+set(SOUND_TOUCH_DIR ../external/SoundTouch)
+add_subdirectory(${SOUND_TOUCH_DIR} soundtouch)
 
 # 添加头文件路径
 include_directories(source
         android
-        ${soundtouch_dir})
+        ${SOUND_TOUCH_DIR})
 
 # 添加源文件
 add_library(media_player

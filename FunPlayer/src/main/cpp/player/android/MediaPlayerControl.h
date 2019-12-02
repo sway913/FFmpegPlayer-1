@@ -1,10 +1,8 @@
-#ifndef CAINMEDIAPLAYER_H
-#define CAINMEDIAPLAYER_H
-
+#pragma once
+#include <iostream>
+#include <mutex>
+#include <thread>
 #include <AndroidLog.h>
-#include <Mutex.h>
-#include <Condition.h>
-#include <Thread.h>
 #include <player/MediaPlayerEx.h>
 
 enum media_event_type {
@@ -78,7 +76,7 @@ public:
     virtual void notify(int msg, int ext1, int ext2, void *obj) {}
 };
 
-class MediaPlayerControl : public Runnable
+class MediaPlayerControl
 {
 public:
     MediaPlayerControl();
@@ -151,26 +149,22 @@ public:
 
     void notify(int msg, int ext1, int ext2, void *obj = NULL, int len = 0);
 
-protected:
-    void run() override;
+    void run();
 
 private:
     void postEvent(int what, int arg1, int arg2, void *obj = NULL);
 
 private:
-    Mutex mMutex;
-    Condition mCondition;
-    Thread *msgThread;
-    bool abortRequest;
-    GLESDevice *videoDevice;
-    MediaPlayerEx *mMediaPlayerEx;
-    MediaPlayerListener *mListener;
+    std::mutex              mMutex;
+    std::thread             mThread;
+    GLESDevice*             mVideoDevice;
+    MediaPlayerEx*          mMediaPlayerEx;
+    MediaPlayerListener*    mListener;
 
-    bool mSeeking;
-    long mSeekingPosition;
-    bool mPrepareSync;
-    status_t mPrepareStatus;
-    int mAudioSessionId;
+    bool                    abortRequest;
+    bool                    mSeeking;
+    long                    mSeekingPosition;
+    bool                    mPrepareSync;
+    status_t                mPrepareStatus;
+    int                     mAudioSessionId;
 };
-
-#endif //CAINMEDIAPLAYER_H

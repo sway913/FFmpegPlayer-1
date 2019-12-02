@@ -2,42 +2,35 @@
 #include "MediaPlayerControl.h"
 #include "JniHelper.h"
 
-MediaPlayerControl::MediaPlayerControl()
+MediaPlayerControl::MediaPlayerControl():
+        mVideoDevice(nullptr),
+    mMediaPlayerEx(nullptr),
+    mListener(nullptr),
+    abortRequest(true),
+    mSeeking(false),
+    mSeekingPosition(0),
+    mPrepareSync(false),
+    mPrepareStatus(NO_ERROR),
+    mAudioSessionId(0)
 {
-    msgThread = nullptr;
-    abortRequest = true;
-    videoDevice = nullptr;
-    mMediaPlayerEx = nullptr;
-    mListener = nullptr;
-    mPrepareSync = false;
-    mPrepareStatus = NO_ERROR;
-    mAudioSessionId = 0;
-    mSeeking = false;
-    mSeekingPosition = 0;
 }
 
 MediaPlayerControl::~MediaPlayerControl()
 {
-
 }
 
 void MediaPlayerControl::init()
 {
     mMutex.lock();
     abortRequest = false;
-    mCondition.signal();
     mMutex.unlock();
 
     mMutex.lock();
-    if (videoDevice == nullptr)
-    {
-        videoDevice = new GLESDevice();
-    }
-    if (msgThread == nullptr)
-    {
-        msgThread = new Thread(this);
-        msgThread->start();
-    }
+
+    mVideoDevice = new GLESDevice();
+
+    mThread = std::thread(&MediaPlayerControl::run, this);
+
     mMutex.unlock();
 }
 
@@ -45,19 +38,13 @@ void MediaPlayerControl::disconnect()
 {
     mMutex.lock();
     abortRequest = true;
-    mCondition.signal();
     mMutex.unlock();
 
     reset();
 
-    if (msgThread != nullptr)
-    {
-        msgThread->join();
-        delete msgThread;
-        msgThread = nullptr;
-    }
+    mThread.join();
 
-    SAFE_DELETE(videoDevice);
+    SAFE_DELETE(mVideoDevice);
     SAFE_DELETE(mListener);
 }
 
@@ -72,7 +59,7 @@ status_t MediaPlayerControl::setDataSource(const char *url, int64_t offset, cons
         mMediaPlayerEx = new MediaPlayerEx();
     }
     mMediaPlayerEx->setDataSource(url, offset, headers);
-    mMediaPlayerEx->setVideoDevice(videoDevice);
+    mMediaPlayerEx->setVideoDevice(mVideoDevice);
     return NO_ERROR;
 }
 
@@ -99,7 +86,7 @@ status_t MediaPlayerControl::setVideoSurface(ANativeWindow *native_window)
     }
     if (native_window != nullptr)
     {
-        videoDevice->surfaceCreated(native_window);
+        mVideoDevice->surfaceCreated(native_window);
         return NO_ERROR;
     }
     return NO_ERROR;

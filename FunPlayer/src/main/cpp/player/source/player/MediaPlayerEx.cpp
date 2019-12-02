@@ -136,7 +136,7 @@ status_t MediaPlayerEx::reset()
 
 void MediaPlayerEx::setDataSource(const char *url, int64_t offset, const char *headers)
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     playerState->url = av_strdup(url);
     playerState->offset = offset;
     if (headers)
@@ -147,13 +147,13 @@ void MediaPlayerEx::setDataSource(const char *url, int64_t offset, const char *h
 
 void MediaPlayerEx::setVideoDevice(VideoDevice *videoDevice)
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     mediaSync->setVideoDevice(videoDevice);
 }
 
 status_t MediaPlayerEx::prepare()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     if (!playerState->url)
     {
         return BAD_VALUE;
@@ -165,7 +165,7 @@ status_t MediaPlayerEx::prepare()
 
 status_t MediaPlayerEx::prepareAsync()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     if (!playerState->url)
     {
         return BAD_VALUE;
@@ -180,37 +180,38 @@ status_t MediaPlayerEx::prepareAsync()
 
 void MediaPlayerEx::start()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     playerState->abortRequest = 0;
     playerState->pauseRequest = 0;
     mExit = false;
-    mCondition.signal();
+    mCondition.notify_one();
 }
 
 void MediaPlayerEx::pause()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     playerState->pauseRequest = 1;
-    mCondition.signal();
+    mCondition.notify_one();
 }
 
 void MediaPlayerEx::resume()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     playerState->pauseRequest = 0;
-    mCondition.signal();
+    mCondition.notify_one();
 }
 
 void MediaPlayerEx::stop()
 {
     mMutex.lock();
     playerState->abortRequest = 1;
-    mCondition.signal();
+    mCondition.notify_one();
     mMutex.unlock();
     mMutex.lock();
     while (!mExit)
     {
-        mCondition.wait(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
+        mCondition.wait(lock);
     }
     mMutex.unlock();
     mThread.join();
@@ -228,7 +229,8 @@ void MediaPlayerEx::seekTo(float timeMs)
     mMutex.lock();
     while (playerState->seekRequest)
     {
-        mCondition.wait(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
+        mCondition.wait(lock);
     }
     mMutex.unlock();
 
@@ -245,7 +247,7 @@ void MediaPlayerEx::seekTo(float timeMs)
         playerState->seekRel = 0;
         playerState->seekFlags &= ~AVSEEK_FLAG_BYTE;
         playerState->seekRequest = 1;
-        mCondition.signal();
+        mCondition.notify_one();
     }
 
 }
@@ -254,7 +256,7 @@ void MediaPlayerEx::setLooping(int looping)
 {
     mMutex.lock();
     playerState->loop = looping;
-    mCondition.signal();
+    mCondition.notify_one();
     mMutex.unlock();
 }
 
@@ -270,7 +272,7 @@ void MediaPlayerEx::setMute(int mute)
 {
     mMutex.lock();
     playerState->mute = mute;
-    mCondition.signal();
+    mCondition.notify_one();
     mMutex.unlock();
 }
 
@@ -278,7 +280,7 @@ void MediaPlayerEx::setRate(float rate)
 {
     mMutex.lock();
     playerState->playbackRate = rate;
-    mCondition.signal();
+    mCondition.notify_one();
     mMutex.unlock();
 }
 
@@ -286,13 +288,13 @@ void MediaPlayerEx::setPitch(float pitch)
 {
     mMutex.lock();
     playerState->playbackPitch = pitch;
-    mCondition.signal();
+    mCondition.notify_one();
     mMutex.unlock();
 }
 
 int MediaPlayerEx::getRotate()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     if (videoDecoder)
     {
         return videoDecoder->getRotate();
@@ -302,7 +304,7 @@ int MediaPlayerEx::getRotate()
 
 int MediaPlayerEx::getVideoWidth()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     if (videoDecoder)
     {
         return videoDecoder->getCodecContext()->width;
@@ -312,7 +314,7 @@ int MediaPlayerEx::getVideoWidth()
 
 int MediaPlayerEx::getVideoHeight()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     if (videoDecoder)
     {
         return videoDecoder->getCodecContext()->height;
@@ -322,7 +324,7 @@ int MediaPlayerEx::getVideoHeight()
 
 long MediaPlayerEx::getCurrentPosition()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     int64_t currentPosition = 0;
     // 处于定位
     if (playerState->seekRequest)
@@ -331,7 +333,6 @@ long MediaPlayerEx::getCurrentPosition()
     }
     else
     {
-
         // 起始延时
         int64_t start_time = pFormatCtx->start_time;
         int64_t start_diff = 0;
@@ -362,13 +363,13 @@ long MediaPlayerEx::getCurrentPosition()
 
 long MediaPlayerEx::getDuration()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     return (long) mDuration;
 }
 
 int MediaPlayerEx::isPlaying()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     return !playerState->abortRequest && !playerState->pauseRequest;
 }
 
@@ -399,13 +400,13 @@ static int avformat_interrupt_cb(void *ctx)
 
 AVMessageQueue *MediaPlayerEx::getMessageQueue()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     return playerState->messageQueue;
 }
 
 PlayerState *MediaPlayerEx::getPlayerState()
 {
-    Mutex::Autolock lock(mMutex);
+    std::lock_guard<std::mutex> lock(mMutex);
     return playerState;
 }
 
@@ -662,7 +663,7 @@ int MediaPlayerEx::readPackets()
     if (ret < 0)
     {
         mExit = true;
-        mCondition.signal();
+        mCondition.notify_one();
         if (playerState->messageQueue)
         {
             const char errorMsg[] = "prepare decoder failed!";
@@ -873,7 +874,7 @@ int MediaPlayerEx::readPackets()
             }
             attachmentRequest = 1;
             playerState->seekRequest = 0;
-            mCondition.signal();
+            mCondition.notify_one();
             eof = 0;
             // 定位完成回调通知
             if (playerState->messageQueue)
@@ -1005,7 +1006,7 @@ int MediaPlayerEx::readPackets()
         mediaSync->stop();
     }
     mExit = true;
-    mCondition.signal();
+    mCondition.notify_one();
 
     if (ret < 0)
     {

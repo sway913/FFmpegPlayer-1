@@ -65,7 +65,7 @@ public class MediaPlayerEx implements IMediaPlayer {
         native_init();
     }
 
-    private static final String TAG = "MediaPlayerEx";
+    private static final String TAG = "MediaPlayerControl";
 
     @AccessedByNative
     private long mNativeContext;
@@ -81,9 +81,9 @@ public class MediaPlayerEx implements IMediaPlayer {
 
     /**
      * Default constructor. Consider using one of the create() methods for
-     * synchronously instantiating a MediaPlayer from a Uri or resource.
-     * <p>When done with the MediaPlayer, you should call  {@link #release()},
-     * to free the resources. If not released, too many MediaPlayer instances may
+     * synchronously instantiating a MediaPlayerEx from a Uri or resource.
+     * <p>When done with the MediaPlayerEx, you should call  {@link #release()},
+     * to free the resources. If not released, too many MediaPlayerEx instances may
      * result in an exception.</p>
      */
     public MediaPlayerEx() {
@@ -103,7 +103,7 @@ public class MediaPlayerEx implements IMediaPlayer {
     }
 
     /*
-     * Update the MediaPlayer SurfaceTexture.
+     * Update the MediaPlayerEx SurfaceTexture.
      * Call after setting a new display surface.
      */
     private native void _setVideoSurface(Surface surface);
@@ -161,31 +161,31 @@ public class MediaPlayerEx implements IMediaPlayer {
     }
 
     /**
-     * Convenience method to create a MediaPlayer for a given Uri.
+     * Convenience method to create a MediaPlayerEx for a given Uri.
      * On success, {@link #prepare()} will already have been called and must not be called again.
-     * <p>When done with the MediaPlayer, you should call  {@link #release()},
-     * to free the resources. If not released, too many MediaPlayer instances will
+     * <p>When done with the MediaPlayerEx, you should call  {@link #release()},
+     * to free the resources. If not released, too many MediaPlayerEx instances will
      * result in an exception.</p>
      *
      * @param context the Context to use
      * @param uri     the Uri from which to get the datasource
-     * @return a MediaPlayer object, or null if creation failed
+     * @return a MediaPlayerEx object, or null if creation failed
      */
     public static MediaPlayerEx create(Context context, Uri uri) {
         return create(context, uri, null);
     }
 
     /**
-     * Convenience method to create a MediaPlayer for a given Uri.
+     * Convenience method to create a MediaPlayerEx for a given Uri.
      * On success, {@link #prepare()} will already have been called and must not be called again.
-     * <p>When done with the MediaPlayer, you should call  {@link #release()},
-     * to free the resources. If not released, too many MediaPlayer instances will
+     * <p>When done with the MediaPlayerEx, you should call  {@link #release()},
+     * to free the resources. If not released, too many MediaPlayerEx instances will
      * result in an exception.</p>
      *
      * @param context the Context to use
      * @param uri     the Uri from which to get the datasource
      * @param holder  the SurfaceHolder to use for displaying the video
-     * @return a MediaPlayer object, or null if creation failed
+     * @return a MediaPlayerEx object, or null if creation failed
      */
     public static MediaPlayerEx create(Context context, Uri uri, SurfaceHolder holder) {
 
@@ -211,19 +211,19 @@ public class MediaPlayerEx implements IMediaPlayer {
         return null;
     }
 
-    // Note no convenience method to create a MediaPlayer with SurfaceTexture sink.
+    // Note no convenience method to create a MediaPlayerEx with SurfaceTexture sink.
 
     /**
-     * Convenience method to create a MediaPlayer for a given resource id.
+     * Convenience method to create a MediaPlayerEx for a given resource id.
      * On success, {@link #prepare()} will already have been called and must not be called again.
-     * <p>When done with the MediaPlayer, you should call  {@link #release()},
-     * to free the resources. If not released, too many MediaPlayer instances will
+     * <p>When done with the MediaPlayerEx, you should call  {@link #release()},
+     * to free the resources. If not released, too many MediaPlayerEx instances will
      * result in an exception.</p>
      *
      * @param context the Context to use
      * @param resid   the raw resource id (<var>R.raw.&lt;something></var>) for
      *                the resource to use as the datasource
-     * @return a MediaPlayer object, or null if creation failed
+     * @return a MediaPlayerEx object, or null if creation failed
      */
     public static MediaPlayerEx create(Context context, int resid) {
         try {
@@ -390,7 +390,7 @@ public class MediaPlayerEx implements IMediaPlayer {
      * <p>
      * After setting the datasource and the display surface, you need to either
      * call prepare() or prepareAsync(). For files, it is OK to call prepare(),
-     * which blocks until MediaPlayer is ready for playback.
+     * which blocks until MediaPlayerEx is ready for playback.
      *
      * @throws IllegalStateException if it is called in an invalid state
      */
@@ -477,12 +477,12 @@ public class MediaPlayerEx implements IMediaPlayer {
     private native void _resume() throws IllegalStateException;
 
     /**
-     * Set the low-level power management behavior for this MediaPlayer.  This
-     * can be used when the MediaPlayer is not playing through a SurfaceHolder
+     * Set the low-level power management behavior for this MediaPlayerEx.  This
+     * can be used when the MediaPlayerEx is not playing through a SurfaceHolder
      * set with {@link #setDisplay(SurfaceHolder)} and thus can use the
      * high-level {@link #setScreenOnWhilePlaying(boolean)} feature.
      *
-     * <p>This function has the MediaPlayer access the low-level power manager
+     * <p>This function has the MediaPlayerEx access the low-level power manager
      * service to control the device's power usage while playing is occurring.
      * The parameter is a combination of {@link android.os.PowerManager} wake flags.
      * Use of this method requires {@link android.Manifest.permission#WAKE_LOCK}
@@ -596,7 +596,7 @@ public class MediaPlayerEx implements IMediaPlayer {
     private native int _getVideoHeight();
 
     /**
-     * Checks whether the MediaPlayer is playing.
+     * Checks whether the MediaPlayerEx is playing.
      *
      * @return true if currently playing, false otherwise
      */
@@ -651,16 +651,16 @@ public class MediaPlayerEx implements IMediaPlayer {
     // TODO public int setMetadataFilter(Set<Integer> allow, Set<Integer> block)
 
     /**
-     * Releases resources associated with this MediaPlayer object.
+     * Releases resources associated with this MediaPlayerEx object.
      * It is considered good practice to call this method when you're
-     * done using the MediaPlayer. In particular, whenever an Activity
+     * done using the MediaPlayerEx. In particular, whenever an Activity
      * of an application is paused (its onPause() method is called),
      * or stopped (its onStop() method is called), this method should be
-     * invoked to release the MediaPlayer object, unless the application
+     * invoked to release the MediaPlayerEx object, unless the application
      * has a special need to keep the object around. In addition to
      * unnecessary resources (such as memory and instances of codecs)
      * being held, failure to call this method immediately if a
-     * MediaPlayer object is no longer needed may also lead to
+     * MediaPlayerEx object is no longer needed may also lead to
      * continuous battery consumption for mobile devices, and playback
      * failure for other applications if no multiple instances of the
      * same codec are supported on a device. Even if multiple instances
@@ -687,7 +687,7 @@ public class MediaPlayerEx implements IMediaPlayer {
     private native void _release();
 
     /**
-     * Resets the MediaPlayer to its uninitialized state. After calling
+     * Resets the MediaPlayerEx to its uninitialized state. After calling
      * this method, you will have to initialize it again by setting the
      * data source and calling prepare().
      */
@@ -702,7 +702,7 @@ public class MediaPlayerEx implements IMediaPlayer {
     private native void _reset();
 
     /**
-     * Sets the audio stream type for this MediaPlayer. See {@link AudioManager}
+     * Sets the audio stream type for this MediaPlayerEx. See {@link AudioManager}
      * for a list of stream types. Must call this method before prepare() or
      * prepareAsync() in order for the target stream type to become effective
      * thereafter.
@@ -728,9 +728,9 @@ public class MediaPlayerEx implements IMediaPlayer {
     private native void _setLooping(boolean looping);
 
     /**
-     * Checks whether the MediaPlayer is looping or non-looping.
+     * Checks whether the MediaPlayerEx is looping or non-looping.
      *
-     * @return true if the MediaPlayer is currently looping, false otherwise
+     * @return true if the MediaPlayerEx is currently looping, false otherwise
      */
     @Override
     public boolean isLooping() {
@@ -763,12 +763,12 @@ public class MediaPlayerEx implements IMediaPlayer {
      *
      * @param sessionId the audio session ID.
      *                  The audio session ID is a system wide unique identifier for the audio stream played by
-     *                  this MediaPlayer instance.
+     *                  this MediaPlayerEx instance.
      *                  The primary use of the audio session ID  is to associate audio effects to a particular
-     *                  instance of MediaPlayer: if an audio session ID is provided when creating an audio effect,
+     *                  instance of MediaPlayerEx: if an audio session ID is provided when creating an audio effect,
      *                  this effect will be applied only to the audio content of media players within the same
      *                  audio session and not to the output mix.
-     *                  When created, a MediaPlayer instance automatically generates its own audio session ID.
+     *                  When created, a MediaPlayerEx instance automatically generates its own audio session ID.
      *                  However, it is possible to force this player to be part of an already existing audio session
      *                  by calling this method.
      *                  This method must be called before one of the overloaded <code> setDataSource </code> methods.
@@ -786,7 +786,7 @@ public class MediaPlayerEx implements IMediaPlayer {
      * Returns the audio session ID.
      *
      * @return the audio session ID. {@see #setAudioSessionId(int)}
-     * Note that the audio session ID is 0 only if a problem occured when the MediaPlayer was contructed.
+     * Note that the audio session ID is 0 only if a problem occured when the MediaPlayerEx was contructed.
      */
     @Override
     public int getAudioSessionId() {
@@ -1004,7 +1004,7 @@ public class MediaPlayerEx implements IMediaPlayer {
     /**
      * Called from native code when an interesting event happens.  This method
      * just uses the EventHandler system to post the event back to the main app thread.
-     * We use a weak reference to the original MediaPlayer object so that the native
+     * We use a weak reference to the original MediaPlayerEx object so that the native
      * code is safe from the object disappearing from underneath it.  (This is
      * the cookie passed to native_setup().)
      */

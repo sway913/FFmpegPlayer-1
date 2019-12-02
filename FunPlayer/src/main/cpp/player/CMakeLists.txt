@@ -59,11 +59,11 @@ add_library(media_player
 
 
         source/player/AVMessageQueue.cpp
-        source/player/MediaPlayer.cpp
+        source/player/MediaPlayerEx.cpp
         source/player/PlayerState.cpp
 
         # controller
-        android/MediaPlayerEx.cpp
+        android/MediaPlayerControl.cpp
         android/JniHelper.cpp
         android/MediaPlayerEx_Jni.cpp)
 

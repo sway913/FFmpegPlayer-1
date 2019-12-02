@@ -5,7 +5,7 @@
 #include <Mutex.h>
 #include <Condition.h>
 #include <Thread.h>
-#include <player/MediaPlayer.h>
+#include <player/MediaPlayerEx.h>
 
 enum media_event_type {
     MEDIA_NOP               = 0, // interface test message
@@ -45,10 +45,10 @@ enum media_info_type {
     // The video is too complex for the decoder: it can't decode frames fast
     // enough. Possibly only the audio plays fine at this stage.
     MEDIA_INFO_VIDEO_TRACK_LAGGING = 700,
-    // MediaPlayer is temporarily pausing playback internally in order to
+    // MediaPlayerEx is temporarily pausing playback internally in order to
     // buffer more data.
     MEDIA_INFO_BUFFERING_START = 701,
-    // MediaPlayer is resuming playback after filling buffers.
+    // MediaPlayerEx is resuming playback after filling buffers.
     MEDIA_INFO_BUFFERING_END = 702,
     // Bandwidth in recent past
     MEDIA_INFO_NETWORK_BANDWIDTH = 703,
@@ -78,12 +78,12 @@ public:
     virtual void notify(int msg, int ext1, int ext2, void *obj) {}
 };
 
-class MediaPlayerEx : public Runnable
+class MediaPlayerControl : public Runnable
 {
 public:
-    MediaPlayerEx();
+    MediaPlayerControl();
 
-    virtual ~MediaPlayerEx();
+    virtual ~MediaPlayerControl();
 
     void init();
 
@@ -163,7 +163,7 @@ private:
     Thread *msgThread;
     bool abortRequest;
     GLESDevice *videoDevice;
-    MediaPlayer *mediaPlayer;
+    MediaPlayerEx *mMediaPlayerEx;
     MediaPlayerListener *mListener;
 
     bool mSeeking;

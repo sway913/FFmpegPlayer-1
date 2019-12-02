@@ -1,13 +1,13 @@
 #include <player/AVMessageQueue.h>
-#include "MediaPlayerEx.h"
+#include "MediaPlayerControl.h"
 #include "JniHelper.h"
 
-MediaPlayerEx::MediaPlayerEx()
+MediaPlayerControl::MediaPlayerControl()
 {
     msgThread = nullptr;
     abortRequest = true;
     videoDevice = nullptr;
-    mediaPlayer = nullptr;
+    mMediaPlayerEx = nullptr;
     mListener = nullptr;
     mPrepareSync = false;
     mPrepareStatus = NO_ERROR;
@@ -16,12 +16,12 @@ MediaPlayerEx::MediaPlayerEx()
     mSeekingPosition = 0;
 }
 
-MediaPlayerEx::~MediaPlayerEx()
+MediaPlayerControl::~MediaPlayerControl()
 {
 
 }
 
-void MediaPlayerEx::init()
+void MediaPlayerControl::init()
 {
     mMutex.lock();
     abortRequest = false;
@@ -41,7 +41,7 @@ void MediaPlayerEx::init()
     mMutex.unlock();
 }
 
-void MediaPlayerEx::disconnect()
+void MediaPlayerControl::disconnect()
 {
     mMutex.lock();
     abortRequest = true;
@@ -61,39 +61,39 @@ void MediaPlayerEx::disconnect()
     SAFE_DELETE(mListener);
 }
 
-status_t MediaPlayerEx::setDataSource(const char *url, int64_t offset, const char *headers)
+status_t MediaPlayerControl::setDataSource(const char *url, int64_t offset, const char *headers)
 {
     if (url == nullptr)
     {
         return BAD_VALUE;
     }
-    if (mediaPlayer == nullptr)
+    if (mMediaPlayerEx == nullptr)
     {
-        mediaPlayer = new MediaPlayer();
+        mMediaPlayerEx = new MediaPlayerEx();
     }
-    mediaPlayer->setDataSource(url, offset, headers);
-    mediaPlayer->setVideoDevice(videoDevice);
+    mMediaPlayerEx->setDataSource(url, offset, headers);
+    mMediaPlayerEx->setVideoDevice(videoDevice);
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::setMetadataFilter(char **allow, char **block)
+status_t MediaPlayerControl::setMetadataFilter(char **allow, char **block)
 {
     // do nothing
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::getMetadata(bool update_only, bool apply_filter, AVDictionary **metadata)
+status_t MediaPlayerControl::getMetadata(bool update_only, bool apply_filter, AVDictionary **metadata)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return mediaPlayer->getMetadata(metadata);
+        return mMediaPlayerEx->getMetadata(metadata);
     }
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::setVideoSurface(ANativeWindow *native_window)
+status_t MediaPlayerControl::setVideoSurface(ANativeWindow *native_window)
 {
-    if (mediaPlayer == nullptr)
+    if (mMediaPlayerEx == nullptr)
     {
         return NO_INIT;
     }
@@ -105,16 +105,16 @@ status_t MediaPlayerEx::setVideoSurface(ANativeWindow *native_window)
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::setListener(MediaPlayerListener *listener)
+status_t MediaPlayerControl::setListener(MediaPlayerListener *listener)
 {
     SAFE_DELETE(mListener);
     mListener = listener;
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::prepare()
+status_t MediaPlayerControl::prepare()
 {
-    if (mediaPlayer == nullptr)
+    if (mMediaPlayerEx == nullptr)
     {
         return NO_INIT;
     }
@@ -123,7 +123,7 @@ status_t MediaPlayerEx::prepare()
         return -EALREADY;
     }
     mPrepareSync = true;
-    status_t ret = mediaPlayer->prepare();
+    status_t ret = mMediaPlayerEx->prepare();
     if (ret != NO_ERROR)
     {
         return ret;
@@ -135,95 +135,95 @@ status_t MediaPlayerEx::prepare()
     return mPrepareStatus;
 }
 
-status_t MediaPlayerEx::prepareAsync()
+status_t MediaPlayerControl::prepareAsync()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return mediaPlayer->prepareAsync();
+        return mMediaPlayerEx->prepareAsync();
     }
     return INVALID_OPERATION;
 }
 
-void MediaPlayerEx::start()
+void MediaPlayerControl::start()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->start();
+        mMediaPlayerEx->start();
     }
 }
 
-void MediaPlayerEx::stop()
+void MediaPlayerControl::stop()
 {
-    if (mediaPlayer)
+    if (mMediaPlayerEx)
     {
-        mediaPlayer->stop();
+        mMediaPlayerEx->stop();
     }
 }
 
-void MediaPlayerEx::pause()
+void MediaPlayerControl::pause()
 {
-    if (mediaPlayer)
+    if (mMediaPlayerEx)
     {
-        mediaPlayer->pause();
+        mMediaPlayerEx->pause();
     }
 }
 
-void MediaPlayerEx::resume()
+void MediaPlayerControl::resume()
 {
-    if (mediaPlayer)
+    if (mMediaPlayerEx)
     {
-        mediaPlayer->resume();
+        mMediaPlayerEx->resume();
     }
 }
 
-bool MediaPlayerEx::isPlaying()
+bool MediaPlayerControl::isPlaying()
 {
-    if (mediaPlayer)
+    if (mMediaPlayerEx)
     {
-        return (mediaPlayer->isPlaying() != 0);
+        return (mMediaPlayerEx->isPlaying() != 0);
     }
     return false;
 }
 
-int MediaPlayerEx::getRotate()
+int MediaPlayerControl::getRotate()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return mediaPlayer->getRotate();
+        return mMediaPlayerEx->getRotate();
     }
     return 0;
 }
 
-int MediaPlayerEx::getVideoWidth()
+int MediaPlayerControl::getVideoWidth()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return mediaPlayer->getVideoWidth();
+        return mMediaPlayerEx->getVideoWidth();
     }
     return 0;
 }
 
-int MediaPlayerEx::getVideoHeight()
+int MediaPlayerControl::getVideoHeight()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return mediaPlayer->getVideoHeight();
+        return mMediaPlayerEx->getVideoHeight();
     }
     return 0;
 }
 
-status_t MediaPlayerEx::seekTo(float msec)
+status_t MediaPlayerControl::seekTo(float msec)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
         // if in seeking state, put seek message in queue, to process after preview seeking.
         if (mSeeking)
         {
-            mediaPlayer->getMessageQueue()->postMessage(MSG_REQUEST_SEEK, msec);
+            mMediaPlayerEx->getMessageQueue()->postMessage(MSG_REQUEST_SEEK, msec);
         }
         else
         {
-            mediaPlayer->seekTo(msec);
+            mMediaPlayerEx->seekTo(msec);
             mSeekingPosition = (long) msec;
             mSeeking = true;
         }
@@ -231,98 +231,98 @@ status_t MediaPlayerEx::seekTo(float msec)
     return NO_ERROR;
 }
 
-long MediaPlayerEx::getCurrentPosition()
+long MediaPlayerControl::getCurrentPosition()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
         if (mSeeking)
         {
             return mSeekingPosition;
         }
-        return mediaPlayer->getCurrentPosition();
+        return mMediaPlayerEx->getCurrentPosition();
     }
     return 0;
 }
 
-long MediaPlayerEx::getDuration()
+long MediaPlayerControl::getDuration()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return mediaPlayer->getDuration();
+        return mMediaPlayerEx->getDuration();
     }
     return -1;
 }
 
-status_t MediaPlayerEx::reset()
+status_t MediaPlayerControl::reset()
 {
     mPrepareSync = false;
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->reset();
-        delete mediaPlayer;
-        mediaPlayer = nullptr;
+        mMediaPlayerEx->reset();
+        delete mMediaPlayerEx;
+        mMediaPlayerEx = nullptr;
     }
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::setAudioStreamType(int type)
+status_t MediaPlayerControl::setAudioStreamType(int type)
 {
     // TODO setAudioStreamType
     return NO_ERROR;
 }
 
-status_t MediaPlayerEx::setLooping(bool looping)
+status_t MediaPlayerControl::setLooping(bool looping)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->setLooping(looping);
+        mMediaPlayerEx->setLooping(looping);
     }
     return NO_ERROR;
 }
 
-bool MediaPlayerEx::isLooping()
+bool MediaPlayerControl::isLooping()
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        return (mediaPlayer->isLooping() != 0);
+        return (mMediaPlayerEx->isLooping() != 0);
     }
     return false;
 }
 
-status_t MediaPlayerEx::setVolume(float leftVolume, float rightVolume)
+status_t MediaPlayerControl::setVolume(float leftVolume, float rightVolume)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->setVolume(leftVolume, rightVolume);
+        mMediaPlayerEx->setVolume(leftVolume, rightVolume);
     }
     return NO_ERROR;
 }
 
-void MediaPlayerEx::setMute(bool mute)
+void MediaPlayerControl::setMute(bool mute)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->setMute(mute);
+        mMediaPlayerEx->setMute(mute);
     }
 }
 
-void MediaPlayerEx::setRate(float speed)
+void MediaPlayerControl::setRate(float speed)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->setRate(speed);
+        mMediaPlayerEx->setRate(speed);
     }
 }
 
-void MediaPlayerEx::setPitch(float pitch)
+void MediaPlayerControl::setPitch(float pitch)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->setPitch(pitch);
+        mMediaPlayerEx->setPitch(pitch);
     }
 }
 
-status_t MediaPlayerEx::setAudioSessionId(int sessionId)
+status_t MediaPlayerControl::setAudioSessionId(int sessionId)
 {
     if (sessionId < 0)
     {
@@ -332,36 +332,36 @@ status_t MediaPlayerEx::setAudioSessionId(int sessionId)
     return NO_ERROR;
 }
 
-int MediaPlayerEx::getAudioSessionId()
+int MediaPlayerControl::getAudioSessionId()
 {
     return mAudioSessionId;
 }
 
-void MediaPlayerEx::setOption(int category, const char *type, const char *option)
+void MediaPlayerControl::setOption(int category, const char *type, const char *option)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->getPlayerState()->setOption(category, type, option);
+        mMediaPlayerEx->getPlayerState()->setOption(category, type, option);
     }
 }
 
-void MediaPlayerEx::setOption(int category, const char *type, int64_t option)
+void MediaPlayerControl::setOption(int category, const char *type, int64_t option)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->getPlayerState()->setOptionLong(category, type, option);
+        mMediaPlayerEx->getPlayerState()->setOptionLong(category, type, option);
     }
 }
 
-void MediaPlayerEx::notify(int msg, int ext1, int ext2, void *obj, int len)
+void MediaPlayerControl::notify(int msg, int ext1, int ext2, void *obj, int len)
 {
-    if (mediaPlayer != nullptr)
+    if (mMediaPlayerEx != nullptr)
     {
-        mediaPlayer->getMessageQueue()->postMessage(msg, ext1, ext2, obj, len);
+        mMediaPlayerEx->getMessageQueue()->postMessage(msg, ext1, ext2, obj, len);
     }
 }
 
-void MediaPlayerEx::postEvent(int what, int arg1, int arg2, void *obj)
+void MediaPlayerControl::postEvent(int what, int arg1, int arg2, void *obj)
 {
     if (mListener != nullptr)
     {
@@ -369,7 +369,7 @@ void MediaPlayerEx::postEvent(int what, int arg1, int arg2, void *obj)
     }
 }
 
-void MediaPlayerEx::run()
+void MediaPlayerControl::run()
 {
     int retval;
     while (true)
@@ -380,14 +380,14 @@ void MediaPlayerEx::run()
         }
 
         // 如果此时播放器还没准备好，则睡眠10毫秒，等待播放器初始化
-        if (!mediaPlayer || !mediaPlayer->getMessageQueue())
+        if (!mMediaPlayerEx || !mMediaPlayerEx->getMessageQueue())
         {
             av_usleep(10 * 1000);
             continue;
         }
 
         AVMessage msg;
-        retval = mediaPlayer->getMessageQueue()->getMessage(&msg);
+        retval = mMediaPlayerEx->getMessageQueue()->getMessage(&msg);
         if (retval < 0)
         {
             ALOGE("getMessage error");
@@ -400,13 +400,13 @@ void MediaPlayerEx::run()
         {
             case MSG_FLUSH:
             {
-                ALOGD("MediaPlayerEx is flushing.\n");
+                ALOGD("MediaPlayerControl is flushing.\n");
                 postEvent(MEDIA_NOP, 0, 0);
                 break;
             }
             case MSG_ERROR:
             {
-                ALOGD("MediaPlayerEx occurs error: %d\n", msg.arg1);
+                ALOGD("MediaPlayerControl occurs error: %d\n", msg.arg1);
                 if (mPrepareSync)
                 {
                     mPrepareSync = false;
@@ -417,7 +417,7 @@ void MediaPlayerEx::run()
             }
             case MSG_PREPARED:
             {
-                ALOGD("MediaPlayerEx is prepared.\n");
+                ALOGD("MediaPlayerControl is prepared.\n");
                 if (mPrepareSync)
                 {
                     mPrepareSync = false;
@@ -428,56 +428,56 @@ void MediaPlayerEx::run()
             }
             case MSG_STARTED:
             {
-                ALOGD("MediaPlayerEx is started!");
+                ALOGD("MediaPlayerControl is started!");
                 postEvent(MEDIA_STARTED, 0, 0);
                 break;
             }
             case MSG_COMPLETED:
             {
-                ALOGD("MediaPlayerEx is playback completed.\n");
+                ALOGD("MediaPlayerControl is playback completed.\n");
                 postEvent(MEDIA_PLAYBACK_COMPLETE, 0, 0);
                 break;
             }
             case MSG_VIDEO_SIZE_CHANGED:
             {
-                ALOGD("MediaPlayerEx is video size changing: %d, %d\n", msg.arg1, msg.arg2);
+                ALOGD("MediaPlayerControl is video size changing: %d, %d\n", msg.arg1, msg.arg2);
                 postEvent(MEDIA_SET_VIDEO_SIZE, msg.arg1, msg.arg2);
                 break;
             }
             case MSG_SAR_CHANGED:
             {
-                ALOGD("MediaPlayerEx is sar changing: %d, %d\n", msg.arg1, msg.arg2);
+                ALOGD("MediaPlayerControl is sar changing: %d, %d\n", msg.arg1, msg.arg2);
                 postEvent(MEDIA_SET_VIDEO_SAR, msg.arg1, msg.arg2);
                 break;
             }
             case MSG_VIDEO_RENDERING_START:
             {
-                ALOGD("MediaPlayerEx is video playing.\n");
+                ALOGD("MediaPlayerControl is video playing.\n");
                 break;
             }
             case MSG_AUDIO_RENDERING_START:
             {
-                ALOGD("MediaPlayerEx is audio playing.\n");
+                ALOGD("MediaPlayerControl is audio playing.\n");
                 break;
             }
             case MSG_VIDEO_ROTATION_CHANGED:
             {
-                ALOGD("MediaPlayerEx's video rotation is changing: %d\n", msg.arg1);
+                ALOGD("MediaPlayerControl's video rotation is changing: %d\n", msg.arg1);
                 break;
             }
             case MSG_AUDIO_START:
             {
-                ALOGD("MediaPlayerEx starts audio decoder.\n");
+                ALOGD("MediaPlayerControl starts audio decoder.\n");
                 break;
             }
             case MSG_VIDEO_START:
             {
-                ALOGD("MediaPlayerEx starts video decoder.\n");
+                ALOGD("MediaPlayerControl starts video decoder.\n");
                 break;
             }
             case MSG_OPEN_INPUT:
             {
-                ALOGD("MediaPlayerEx is opening input file.\n");
+                ALOGD("MediaPlayerControl is opening input file.\n");
                 break;
             }
             case MSG_FIND_STREAM_INFO:
@@ -493,68 +493,68 @@ void MediaPlayerEx::run()
             }
             case MSG_BUFFERING_END:
             {
-                ALOGD("MediaPlayerEx is buffering finish.\n");
+                ALOGD("MediaPlayerControl is buffering finish.\n");
                 postEvent(MEDIA_INFO, MEDIA_INFO_BUFFERING_END, msg.arg1);
                 break;
             }
             case MSG_BUFFERING_UPDATE:
             {
-                ALOGD("MediaPlayerEx is buffering: %d, %d", msg.arg1, msg.arg2);
+                ALOGD("MediaPlayerControl is buffering: %d, %d", msg.arg1, msg.arg2);
                 postEvent(MEDIA_BUFFERING_UPDATE, msg.arg1, msg.arg2);
                 break;
             }
             case MSG_BUFFERING_TIME_UPDATE:
             {
-                ALOGD("MediaPlayerEx time text update");
+                ALOGD("MediaPlayerControl time text update");
                 break;
             }
             case MSG_SEEK_COMPLETE:
             {
-                ALOGD("MediaPlayerEx seeks completed!\n");
+                ALOGD("MediaPlayerControl seeks completed!\n");
                 mSeeking = false;
                 postEvent(MEDIA_SEEK_COMPLETE, 0, 0);
                 break;
             }
             case MSG_PLAYBACK_STATE_CHANGED:
             {
-                ALOGD("MediaPlayerEx's playback state is changed.");
+                ALOGD("MediaPlayerControl's playback state is changed.");
                 break;
             }
             case MSG_TIMED_TEXT:
             {
-                ALOGD("MediaPlayerEx is updating time text");
+                ALOGD("MediaPlayerControl is updating time text");
                 postEvent(MEDIA_TIMED_TEXT, 0, 0, msg.obj);
                 break;
             }
             case MSG_REQUEST_PREPARE:
             {
-                ALOGD("MediaPlayerEx is preparing...");
+                ALOGD("MediaPlayerControl is preparing...");
                 status_t ret = prepare();
                 if (ret != NO_ERROR)
                 {
-                    ALOGE("MediaPlayerEx prepare error - '%d'", ret);
+                    ALOGE("MediaPlayerControl prepare error - '%d'", ret);
                 }
                 break;
             }
             case MSG_REQUEST_START:
             {
-                ALOGD("MediaPlayerEx is waiting to start.");
+                ALOGD("MediaPlayerControl is waiting to start.");
                 break;
             }
             case MSG_REQUEST_PAUSE:
             {
-                ALOGD("MediaPlayerEx is pausing...");
+                ALOGD("MediaPlayerControl is pausing...");
                 pause();
                 break;
             }
             case MSG_REQUEST_SEEK:
             {
-                ALOGD("MediaPlayerEx is seeking...");
+                ALOGD("MediaPlayerControl is seeking...");
                 mSeeking = true;
                 mSeekingPosition = (long) msg.arg1;
-                if (mediaPlayer != nullptr)
+                if (mMediaPlayerEx != nullptr)
                 {
-                    mediaPlayer->seekTo(mSeekingPosition);
+                    mMediaPlayerEx->seekTo(mSeekingPosition);
                 }
                 break;
             }
@@ -565,7 +565,7 @@ void MediaPlayerEx::run()
             }
             default:
             {
-                ALOGE("MediaPlayerEx unknown MSG_xxx(%d)\n", msg.what);
+                ALOGE("MediaPlayerControl unknown MSG_xxx(%d)\n", msg.what);
                 break;
             }
         }

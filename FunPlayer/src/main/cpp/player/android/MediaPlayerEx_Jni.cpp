@@ -3,7 +3,7 @@
 #include <Condition.h>
 #include <Errors.h>
 #include <JniHelper.h>
-#include <MediaPlayerEx.h>
+#include <MediaPlayerControl.h>
 
 extern "C" {
 #include <libavcodec/jni.h>
@@ -49,18 +49,18 @@ private:
 
 JniMediaPlayerListener::JniMediaPlayerListener(JNIEnv *env, jobject thiz, jobject weak_thiz)
 {
-    // Hold onto the MediaPlayer class for use in calling the static method
+    // Hold onto the MediaPlayerEx class for use in calling the static method
     // that posts events to the application thread.
     jclass clazz = env->GetObjectClass(thiz);
     if (clazz == NULL)
     {
-        ALOGE("Can't find com/cgfay/media/MediaPlayerEx");
+        ALOGE("Can't find com/cgfay/media/MediaPlayerControl");
         jniThrowException(env, "java/lang/Exception");
         return;
     }
     mClass = (jclass) env->NewGlobalRef(clazz);
 
-    // We use a weak reference so the MediaPlayer object can be garbage collected.
+    // We use a weak reference so the MediaPlayerEx object can be garbage collected.
     // The reference is only used as a proxy for callbacks.
     mObject = env->NewGlobalRef(weak_thiz);
 }
@@ -93,15 +93,15 @@ void JniMediaPlayerListener::notify(int msg, int ext1, int ext2, void *obj)
     }
 }
 
-static MediaPlayerEx *getMediaPlayer(JNIEnv *env, jobject thiz)
+static MediaPlayerControl *getMediaPlayer(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *const mp = (MediaPlayerEx *) env->GetLongField(thiz, fields.context);
+    MediaPlayerControl *const mp = (MediaPlayerControl *) env->GetLongField(thiz, fields.context);
     return mp;
 }
 
-static MediaPlayerEx *setMediaPlayer(JNIEnv *env, jobject thiz, long mediaPlayer)
+static MediaPlayerControl *setMediaPlayer(JNIEnv *env, jobject thiz, long mediaPlayer)
 {
-    MediaPlayerEx *old = (MediaPlayerEx *) env->GetLongField(thiz, fields.context);
+    MediaPlayerControl *old = (MediaPlayerControl *) env->GetLongField(thiz, fields.context);
     env->SetLongField(thiz, fields.context, mediaPlayer);
     return old;
 }
@@ -116,7 +116,7 @@ static void process_media_player_call(JNIEnv *env, jobject thiz, int opStatus, c
     {  // Don't throw exception. Instead, send an event.
         if (opStatus != (int) OK)
         {
-            MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+            MediaPlayerControl *mp = getMediaPlayer(env, thiz);
             if (mp != 0) mp->notify(MEDIA_ERROR, opStatus, 0);
         }
     }
@@ -150,7 +150,7 @@ static void process_media_player_call(JNIEnv *env, jobject thiz, int opStatus, c
 
 void MediaPlayerEx_setDataSourceAndHeaders(JNIEnv *env, jobject thiz, jstring path_, jobjectArray keys, jobjectArray values)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -224,7 +224,7 @@ void MediaPlayerEx_setDataSource(JNIEnv *env, jobject thiz, jstring path_)
 
 void MediaPlayerEx_setDataSourceFD(JNIEnv *env, jobject thiz, jobject fileDescriptor, jlong offset, jlong length)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -291,7 +291,7 @@ void MediaPlayerEx_init(JNIEnv *env)
 
 void MediaPlayerEx_setup(JNIEnv *env, jobject thiz, jobject mediaplayer_this)
 {
-    MediaPlayerEx *mp = new MediaPlayerEx();
+    MediaPlayerControl *mp = new MediaPlayerControl();
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/RuntimeException", "Out of memory");
@@ -299,20 +299,20 @@ void MediaPlayerEx_setup(JNIEnv *env, jobject thiz, jobject mediaplayer_this)
     }
 
     // 这里似乎存在问题
-    // init MediaPlayerEx
+    // init MediaPlayerControl
     mp->init();
 
-    // create new listener and give it to MediaPlayer
+    // create new listener and give it to MediaPlayerEx
     JniMediaPlayerListener *listener = new JniMediaPlayerListener(env, thiz, mediaplayer_this);
     mp->setListener(listener);
 
-    // Stow our new C++ MediaPlayer in an opaque field in the Java object.
+    // Stow our new C++ MediaPlayerEx in an opaque field in the Java object.
     setMediaPlayer(env, thiz, (long) mp);
 }
 
 void MediaPlayerEx_release(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp != nullptr)
     {
         mp->disconnect();
@@ -323,7 +323,7 @@ void MediaPlayerEx_release(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_reset(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -334,17 +334,17 @@ void MediaPlayerEx_reset(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_finalize(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp != NULL)
     {
-        ALOGW("MediaPlayer finalized without being released");
+        ALOGW("MediaPlayerEx finalized without being released");
     }
     MediaPlayerEx_release(env, thiz);
 }
 
 void MediaPlayerEx_setVideoSurface(JNIEnv *env, jobject thiz, jobject surface)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -360,7 +360,7 @@ void MediaPlayerEx_setVideoSurface(JNIEnv *env, jobject thiz, jobject surface)
 
 void MediaPlayerEx_setLooping(JNIEnv *env, jobject thiz, jboolean looping)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -371,7 +371,7 @@ void MediaPlayerEx_setLooping(JNIEnv *env, jobject thiz, jboolean looping)
 
 jboolean MediaPlayerEx_isLooping(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -382,7 +382,7 @@ jboolean MediaPlayerEx_isLooping(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_prepare(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -394,7 +394,7 @@ void MediaPlayerEx_prepare(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_prepareAsync(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -405,7 +405,7 @@ void MediaPlayerEx_prepareAsync(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_start(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -416,7 +416,7 @@ void MediaPlayerEx_start(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_pause(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -427,7 +427,7 @@ void MediaPlayerEx_pause(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_resume(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -439,7 +439,7 @@ void MediaPlayerEx_resume(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_stop(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -450,7 +450,7 @@ void MediaPlayerEx_stop(JNIEnv *env, jobject thiz)
 
 void MediaPlayerEx_seekTo(JNIEnv *env, jobject thiz, jfloat timeMs)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -461,7 +461,7 @@ void MediaPlayerEx_seekTo(JNIEnv *env, jobject thiz, jfloat timeMs)
 
 void MediaPlayerEx_setMute(JNIEnv *env, jobject thiz, jboolean mute)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -472,7 +472,7 @@ void MediaPlayerEx_setMute(JNIEnv *env, jobject thiz, jboolean mute)
 
 void MediaPlayerEx_setVolume(JNIEnv *env, jobject thiz, jfloat leftVolume, jfloat rightVolume)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -483,7 +483,7 @@ void MediaPlayerEx_setVolume(JNIEnv *env, jobject thiz, jfloat leftVolume, jfloa
 
 void MediaPlayerEx_setRate(JNIEnv *env, jobject thiz, jfloat speed)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -494,7 +494,7 @@ void MediaPlayerEx_setRate(JNIEnv *env, jobject thiz, jfloat speed)
 
 void MediaPlayerEx_setPitch(JNIEnv *env, jobject thiz, jfloat pitch)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -505,7 +505,7 @@ void MediaPlayerEx_setPitch(JNIEnv *env, jobject thiz, jfloat pitch)
 
 jlong MediaPlayerEx_getCurrentPosition(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -516,7 +516,7 @@ jlong MediaPlayerEx_getCurrentPosition(JNIEnv *env, jobject thiz)
 
 jlong MediaPlayerEx_getDuration(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -527,7 +527,7 @@ jlong MediaPlayerEx_getDuration(JNIEnv *env, jobject thiz)
 
 jboolean MediaPlayerEx_isPlaying(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -538,7 +538,7 @@ jboolean MediaPlayerEx_isPlaying(JNIEnv *env, jobject thiz)
 
 jint MediaPlayerEx_getRotate(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -549,7 +549,7 @@ jint MediaPlayerEx_getRotate(JNIEnv *env, jobject thiz)
 
 jint MediaPlayerEx_getVideoWidth(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -560,7 +560,7 @@ jint MediaPlayerEx_getVideoWidth(JNIEnv *env, jobject thiz)
 
 jint MediaPlayerEx_getVideoHeight(JNIEnv *env, jobject thiz)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -572,7 +572,7 @@ jint MediaPlayerEx_getVideoHeight(JNIEnv *env, jobject thiz)
 void MediaPlayerEx_setOption(JNIEnv *env, jobject thiz,
                                int category, jstring type_, jstring option_)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");
@@ -594,7 +594,7 @@ void MediaPlayerEx_setOption(JNIEnv *env, jobject thiz,
 void MediaPlayerEx_setOptionLong(JNIEnv *env, jobject thiz,
                                    int category, jstring type_, jlong option_)
 {
-    MediaPlayerEx *mp = getMediaPlayer(env, thiz);
+    MediaPlayerControl *mp = getMediaPlayer(env, thiz);
     if (mp == NULL)
     {
         jniThrowException(env, "java/lang/IllegalStateException");

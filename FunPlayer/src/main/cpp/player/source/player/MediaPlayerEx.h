@@ -23,12 +23,12 @@
 #include <convertor/AudioResampler.h>
 
 
-class MediaPlayer : public Runnable
+class MediaPlayerEx : public Runnable
 {
 public:
-    MediaPlayer();
+    MediaPlayerEx();
 
-    virtual ~MediaPlayer();
+    virtual ~MediaPlayerEx();
 
     status_t reset();
 

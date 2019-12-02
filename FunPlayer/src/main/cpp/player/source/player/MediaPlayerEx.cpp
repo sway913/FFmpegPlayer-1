@@ -1,4 +1,4 @@
-#include "MediaPlayer.h"
+#include "MediaPlayerEx.h"
 
 /**
  * FFmpeg操作锁管理回调
@@ -52,7 +52,7 @@ static int lockmgrCallback(void **mtx, enum AVLockOp op)
     return 1;
 }
 
-MediaPlayer::MediaPlayer()
+MediaPlayerEx::MediaPlayerEx()
 {
     av_register_all();
     avformat_network_init();
@@ -83,13 +83,13 @@ MediaPlayer::MediaPlayer()
 
 }
 
-MediaPlayer::~MediaPlayer()
+MediaPlayerEx::~MediaPlayerEx()
 {
     avformat_network_deinit();
     av_lockmgr_register(NULL);
 }
 
-status_t MediaPlayer::reset()
+status_t MediaPlayerEx::reset()
 {
     stop();
     if (mediaSync)
@@ -135,7 +135,7 @@ status_t MediaPlayer::reset()
     return NO_ERROR;
 }
 
-void MediaPlayer::setDataSource(const char *url, int64_t offset, const char *headers)
+void MediaPlayerEx::setDataSource(const char *url, int64_t offset, const char *headers)
 {
     Mutex::Autolock lock(mMutex);
     playerState->url = av_strdup(url);
@@ -146,13 +146,13 @@ void MediaPlayer::setDataSource(const char *url, int64_t offset, const char *hea
     }
 }
 
-void MediaPlayer::setVideoDevice(VideoDevice *videoDevice)
+void MediaPlayerEx::setVideoDevice(VideoDevice *videoDevice)
 {
     Mutex::Autolock lock(mMutex);
     mediaSync->setVideoDevice(videoDevice);
 }
 
-status_t MediaPlayer::prepare()
+status_t MediaPlayerEx::prepare()
 {
     Mutex::Autolock lock(mMutex);
     if (!playerState->url)
@@ -168,7 +168,7 @@ status_t MediaPlayer::prepare()
     return NO_ERROR;
 }
 
-status_t MediaPlayer::prepareAsync()
+status_t MediaPlayerEx::prepareAsync()
 {
     Mutex::Autolock lock(mMutex);
     if (!playerState->url)
@@ -183,7 +183,7 @@ status_t MediaPlayer::prepareAsync()
     return NO_ERROR;
 }
 
-void MediaPlayer::start()
+void MediaPlayerEx::start()
 {
     Mutex::Autolock lock(mMutex);
     playerState->abortRequest = 0;
@@ -192,21 +192,21 @@ void MediaPlayer::start()
     mCondition.signal();
 }
 
-void MediaPlayer::pause()
+void MediaPlayerEx::pause()
 {
     Mutex::Autolock lock(mMutex);
     playerState->pauseRequest = 1;
     mCondition.signal();
 }
 
-void MediaPlayer::resume()
+void MediaPlayerEx::resume()
 {
     Mutex::Autolock lock(mMutex);
     playerState->pauseRequest = 0;
     mCondition.signal();
 }
 
-void MediaPlayer::stop()
+void MediaPlayerEx::stop()
 {
     mMutex.lock();
     playerState->abortRequest = 1;
@@ -226,7 +226,7 @@ void MediaPlayer::stop()
     }
 }
 
-void MediaPlayer::seekTo(float timeMs)
+void MediaPlayerEx::seekTo(float timeMs)
 {
     // when is a live media stream, duration is -1
     if (!playerState->realTime && mDuration < 0)
@@ -260,7 +260,7 @@ void MediaPlayer::seekTo(float timeMs)
 
 }
 
-void MediaPlayer::setLooping(int looping)
+void MediaPlayerEx::setLooping(int looping)
 {
     mMutex.lock();
     playerState->loop = looping;
@@ -268,7 +268,7 @@ void MediaPlayer::setLooping(int looping)
     mMutex.unlock();
 }
 
-void MediaPlayer::setVolume(float leftVolume, float rightVolume)
+void MediaPlayerEx::setVolume(float leftVolume, float rightVolume)
 {
     if (audioDevice)
     {
@@ -276,7 +276,7 @@ void MediaPlayer::setVolume(float leftVolume, float rightVolume)
     }
 }
 
-void MediaPlayer::setMute(int mute)
+void MediaPlayerEx::setMute(int mute)
 {
     mMutex.lock();
     playerState->mute = mute;
@@ -284,7 +284,7 @@ void MediaPlayer::setMute(int mute)
     mMutex.unlock();
 }
 
-void MediaPlayer::setRate(float rate)
+void MediaPlayerEx::setRate(float rate)
 {
     mMutex.lock();
     playerState->playbackRate = rate;
@@ -292,7 +292,7 @@ void MediaPlayer::setRate(float rate)
     mMutex.unlock();
 }
 
-void MediaPlayer::setPitch(float pitch)
+void MediaPlayerEx::setPitch(float pitch)
 {
     mMutex.lock();
     playerState->playbackPitch = pitch;
@@ -300,7 +300,7 @@ void MediaPlayer::setPitch(float pitch)
     mMutex.unlock();
 }
 
-int MediaPlayer::getRotate()
+int MediaPlayerEx::getRotate()
 {
     Mutex::Autolock lock(mMutex);
     if (videoDecoder)
@@ -310,7 +310,7 @@ int MediaPlayer::getRotate()
     return 0;
 }
 
-int MediaPlayer::getVideoWidth()
+int MediaPlayerEx::getVideoWidth()
 {
     Mutex::Autolock lock(mMutex);
     if (videoDecoder)
@@ -320,7 +320,7 @@ int MediaPlayer::getVideoWidth()
     return 0;
 }
 
-int MediaPlayer::getVideoHeight()
+int MediaPlayerEx::getVideoHeight()
 {
     Mutex::Autolock lock(mMutex);
     if (videoDecoder)
@@ -330,7 +330,7 @@ int MediaPlayer::getVideoHeight()
     return 0;
 }
 
-long MediaPlayer::getCurrentPosition()
+long MediaPlayerEx::getCurrentPosition()
 {
     Mutex::Autolock lock(mMutex);
     int64_t currentPosition = 0;
@@ -370,24 +370,24 @@ long MediaPlayer::getCurrentPosition()
     return (long) currentPosition;
 }
 
-long MediaPlayer::getDuration()
+long MediaPlayerEx::getDuration()
 {
     Mutex::Autolock lock(mMutex);
     return (long) mDuration;
 }
 
-int MediaPlayer::isPlaying()
+int MediaPlayerEx::isPlaying()
 {
     Mutex::Autolock lock(mMutex);
     return !playerState->abortRequest && !playerState->pauseRequest;
 }
 
-int MediaPlayer::isLooping()
+int MediaPlayerEx::isLooping()
 {
     return playerState->loop;
 }
 
-int MediaPlayer::getMetadata(AVDictionary **metadata)
+int MediaPlayerEx::getMetadata(AVDictionary **metadata)
 {
     if (!pFormatCtx)
     {
@@ -407,24 +407,24 @@ static int avformat_interrupt_cb(void *ctx)
     return 0;
 }
 
-AVMessageQueue *MediaPlayer::getMessageQueue()
+AVMessageQueue *MediaPlayerEx::getMessageQueue()
 {
     Mutex::Autolock lock(mMutex);
     return playerState->messageQueue;
 }
 
-PlayerState *MediaPlayer::getPlayerState()
+PlayerState *MediaPlayerEx::getPlayerState()
 {
     Mutex::Autolock lock(mMutex);
     return playerState;
 }
 
-void MediaPlayer::run()
+void MediaPlayerEx::run()
 {
     readPackets();
 }
 
-int MediaPlayer::readPackets()
+int MediaPlayerEx::readPackets()
 {
     int ret = 0;
     AVDictionaryEntry *t;
@@ -1043,7 +1043,7 @@ int MediaPlayer::readPackets()
     return ret;
 }
 
-int MediaPlayer::prepareDecoder(int streamIndex)
+int MediaPlayerEx::prepareDecoder(int streamIndex)
 {
     AVCodecContext *avctx;
     AVCodec *codec = NULL;
@@ -1219,11 +1219,11 @@ int MediaPlayer::prepareDecoder(int streamIndex)
 
 void audioPCMQueueCallback(void *opaque, uint8_t *stream, int len)
 {
-    MediaPlayer *mediaPlayer = (MediaPlayer *) opaque;
+    MediaPlayerEx *mediaPlayer = (MediaPlayerEx *) opaque;
     mediaPlayer->pcmQueueCallback(stream, len);
 }
 
-int MediaPlayer::openAudioDevice(int64_t wanted_channel_layout, int wanted_nb_channels,
+int MediaPlayerEx::openAudioDevice(int64_t wanted_channel_layout, int wanted_nb_channels,
                                  int wanted_sample_rate)
 {
     AudioDeviceSpec wanted_spec, spec;
@@ -1301,7 +1301,7 @@ int MediaPlayer::openAudioDevice(int64_t wanted_channel_layout, int wanted_nb_ch
     return spec.size;
 }
 
-void MediaPlayer::pcmQueueCallback(uint8_t *stream, int len)
+void MediaPlayerEx::pcmQueueCallback(uint8_t *stream, int len)
 {
     if (!audioResampler)
     {

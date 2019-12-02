@@ -121,7 +121,7 @@ public interface IMediaPlayer {
      * <p>
      * After setting the datasource and the display surface, you need to either
      * call prepare() or prepareAsync(). For files, it is OK to call prepare(),
-     * which blocks until MediaPlayer is ready for playback.
+     * which blocks until MediaPlayerEx is ready for playback.
      *
      * @throws IllegalStateException if it is called in an invalid state
      */
@@ -176,12 +176,12 @@ public interface IMediaPlayer {
     public void resume() throws IllegalStateException;
 
     /**
-     * Set the low-level power management behavior for this MediaPlayer.  This
-     * can be used when the MediaPlayer is not playing through a SurfaceHolder
+     * Set the low-level power management behavior for this MediaPlayerEx.  This
+     * can be used when the MediaPlayerEx is not playing through a SurfaceHolder
      * set with {@link #setDisplay(SurfaceHolder)} and thus can use the
      * high-level {@link #setScreenOnWhilePlaying(boolean)} feature.
      *
-     * <p>This function has the MediaPlayer access the low-level power manager
+     * <p>This function has the MediaPlayerEx access the low-level power manager
      * service to control the device's power usage while playing is occurring.
      * The parameter is a combination of {@link android.os.PowerManager} wake flags.
      * Use of this method requires {@link android.Manifest.permission#WAKE_LOCK}
@@ -236,7 +236,7 @@ public interface IMediaPlayer {
     public int getVideoHeight();
 
     /**
-     * Checks whether the MediaPlayer is playing.
+     * Checks whether the MediaPlayerEx is playing.
      *
      * @return true if currently playing, false otherwise
      */
@@ -267,16 +267,16 @@ public interface IMediaPlayer {
     public long getDuration();
 
     /**
-     * Releases resources associated with this MediaPlayer object.
+     * Releases resources associated with this MediaPlayerEx object.
      * It is considered good practice to call this method when you're
-     * done using the MediaPlayer. In particular, whenever an Activity
+     * done using the MediaPlayerEx. In particular, whenever an Activity
      * of an application is paused (its onPause() method is called),
      * or stopped (its onStop() method is called), this method should be
-     * invoked to release the MediaPlayer object, unless the application
+     * invoked to release the MediaPlayerEx object, unless the application
      * has a special need to keep the object around. In addition to
      * unnecessary resources (such as memory and instances of codecs)
      * being held, failure to call this method immediately if a
-     * MediaPlayer object is no longer needed may also lead to
+     * MediaPlayerEx object is no longer needed may also lead to
      * continuous battery consumption for mobile devices, and playback
      * failure for other applications if no multiple instances of the
      * same codec are supported on a device. Even if multiple instances
@@ -287,14 +287,14 @@ public interface IMediaPlayer {
     public void release();
 
     /**
-     * Resets the MediaPlayer to its uninitialized state. After calling
+     * Resets the MediaPlayerEx to its uninitialized state. After calling
      * this method, you will have to initialize it again by setting the
      * data source and calling prepare().
      */
     public void reset();
 
     /**
-     * Sets the audio stream type for this MediaPlayer. See {@link AudioManager}
+     * Sets the audio stream type for this MediaPlayerEx. See {@link AudioManager}
      * for a list of stream types. Must call this method before prepare() or
      * prepareAsync() in order for the target stream type to become effective
      * thereafter.
@@ -313,9 +313,9 @@ public interface IMediaPlayer {
     public void setLooping(boolean looping);
 
     /**
-     * Checks whether the MediaPlayer is looping or non-looping.
+     * Checks whether the MediaPlayerEx is looping or non-looping.
      *
-     * @return true if the MediaPlayer is currently looping, false otherwise
+     * @return true if the MediaPlayerEx is currently looping, false otherwise
      */
     public boolean isLooping();
 
@@ -338,12 +338,12 @@ public interface IMediaPlayer {
      *
      * @param sessionId the audio session ID.
      *                  The audio session ID is a system wide unique identifier for the audio stream played by
-     *                  this MediaPlayer instance.
+     *                  this MediaPlayerEx instance.
      *                  The primary use of the audio session ID  is to associate audio effects to a particular
-     *                  instance of MediaPlayer: if an audio session ID is provided when creating an audio effect,
+     *                  instance of MediaPlayerEx: if an audio session ID is provided when creating an audio effect,
      *                  this effect will be applied only to the audio content of media players within the same
      *                  audio session and not to the output mix.
-     *                  When created, a MediaPlayer instance automatically generates its own audio session ID.
+     *                  When created, a MediaPlayerEx instance automatically generates its own audio session ID.
      *                  However, it is possible to force this player to be part of an already existing audio session
      *                  by calling this method.
      *                  This method must be called before one of the overloaded <code> setDataSource </code> methods.
@@ -355,7 +355,7 @@ public interface IMediaPlayer {
      * Returns the audio session ID.
      *
      * @return the audio session ID. {@see #setAudioSessionId(int)}
-     * Note that the audio session ID is 0 only if a problem occured when the MediaPlayer was contructed.
+     * Note that the audio session ID is 0 only if a problem occured when the MediaPlayerEx was contructed.
      */
     public int getAudioSessionId();
 
@@ -389,7 +389,7 @@ public interface IMediaPlayer {
         /**
          * Called when the media file is ready for playback.
          *
-         * @param mp the MediaPlayer that is ready for playback
+         * @param mp the MediaPlayerEx that is ready for playback
          */
         void onPrepared(IMediaPlayer mp);
     }
@@ -410,7 +410,7 @@ public interface IMediaPlayer {
         /**
          * Called when the end of a media source is reached during playback.
          *
-         * @param mp the MediaPlayer that reached the end of the file
+         * @param mp the MediaPlayerEx that reached the end of the file
          */
         void onCompletion(IMediaPlayer mp);
     }
@@ -437,7 +437,7 @@ public interface IMediaPlayer {
          * has already been played indicates that the next 30 percent of the
          * content to play has been buffered.
          *
-         * @param mp      the MediaPlayer the update pertains to
+         * @param mp      the MediaPlayerEx the update pertains to
          * @param percent the percentage (0-100) of the content
          *                that has been buffered or played thus far
          */
@@ -461,7 +461,7 @@ public interface IMediaPlayer {
         /**
          * Called to indicate the completion of a seek operation.
          *
-         * @param mp the MediaPlayer that issued the seek operation
+         * @param mp the MediaPlayerEx that issued the seek operation
          */
         void onSeekComplete(IMediaPlayer mp);
     }
@@ -510,7 +510,7 @@ public interface IMediaPlayer {
         /**
          * Called to indicate an avaliable timed text
          *
-         * @param mp   the MediaPlayer associated with this callback
+         * @param mp   the MediaPlayerEx associated with this callback
          * @param text the timed text sample which contains the text
          *             needed to be displayed and the display format.
          *             {@hide}
@@ -540,7 +540,7 @@ public interface IMediaPlayer {
 
     /**
      * Media server died. In this case, the application must release the
-     * MediaPlayer object and instantiate a new one.
+     * MediaPlayerEx object and instantiate a new one.
      *
      * @see IMediaPlayer.OnInfoListener
      */
@@ -564,7 +564,7 @@ public interface IMediaPlayer {
         /**
          * Called to indicate an error.
          *
-         * @param mp    the MediaPlayer the error pertains to
+         * @param mp    the MediaPlayerEx the error pertains to
          * @param what  the type of error that has occurred:
          *              <ul>
          *              <li>{@link #MEDIA_ERROR_UNKNOWN}
@@ -607,7 +607,7 @@ public interface IMediaPlayer {
     public static final int MEDIA_INFO_VIDEO_TRACK_LAGGING = 700;
 
     /**
-     * MediaPlayer is temporarily pausing playback internally in order to
+     * MediaPlayerEx is temporarily pausing playback internally in order to
      * buffer more data.
      *
      * @see IMediaPlayer.OnInfoListener
@@ -615,7 +615,7 @@ public interface IMediaPlayer {
     public static final int MEDIA_INFO_BUFFERING_START = 701;
 
     /**
-     * MediaPlayer is resuming playback after filling buffers.
+     * MediaPlayerEx is resuming playback after filling buffers.
      *
      * @see IMediaPlayer.OnInfoListener
      */
@@ -652,7 +652,7 @@ public interface IMediaPlayer {
         /**
          * Called to indicate an info or a warning.
          *
-         * @param mp    the MediaPlayer the info pertains to.
+         * @param mp    the MediaPlayerEx the info pertains to.
          * @param what  the type of info or warning.
          *              <ul>
          *              <li>{@link #MEDIA_INFO_UNKNOWN}

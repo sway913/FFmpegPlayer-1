@@ -7,7 +7,6 @@ VideoDecoder::VideoDecoder(AVFormatContext *pFormatCtx, AVCodecContext *avctx,
     this->pFormatCtx = pFormatCtx;
     frameQueue = new FrameQueue(VIDEO_QUEUE_SIZE, 1);
     mExit = true;
-    decodeThread = NULL;
     masterClock = NULL;
     // 旋转角度
     AVDictionaryEntry *entry = av_dict_get(stream->metadata, "rotate", NULL, AV_DICT_MATCH_CASE);
@@ -48,12 +47,9 @@ void VideoDecoder::start()
     {
         frameQueue->start();
     }
-    if (!decodeThread)
-    {
-        decodeThread = new Thread(this);
-        decodeThread->start();
-        mExit = false;
-    }
+
+    decodeThread = std::thread(&VideoDecoder::run, this);
+    mExit = false;
 }
 
 void VideoDecoder::stop()
@@ -69,12 +65,8 @@ void VideoDecoder::stop()
         mCondition.wait(mMutex);
     }
     mMutex.unlock();
-    if (decodeThread)
-    {
-        decodeThread->join();
-        delete decodeThread;
-        decodeThread = NULL;
-    }
+
+    decodeThread.join();
 }
 
 void VideoDecoder::flush()

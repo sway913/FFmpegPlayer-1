@@ -72,7 +72,6 @@ MediaPlayerEx::MediaPlayerEx()
 
     mediaSync = new MediaSync(playerState);
     audioResampler = NULL;
-    readThread = NULL;
     mExit = true;
 
     // 注册一个多线程锁管理回调，主要是解决多个视频源时保持avcodec_open/close的原子操作
@@ -160,11 +159,7 @@ status_t MediaPlayerEx::prepare()
         return BAD_VALUE;
     }
     playerState->abortRequest = 0;
-    if (!readThread)
-    {
-        readThread = new Thread(this);
-        readThread->start();
-    }
+    mThread = std::thread(&MediaPlayerEx::run, this);
     return NO_ERROR;
 }
 
@@ -218,12 +213,7 @@ void MediaPlayerEx::stop()
         mCondition.wait(mMutex);
     }
     mMutex.unlock();
-    if (readThread != NULL)
-    {
-        readThread->join();
-        delete readThread;
-        readThread = NULL;
-    }
+    mThread.join();
 }
 
 void MediaPlayerEx::seekTo(float timeMs)

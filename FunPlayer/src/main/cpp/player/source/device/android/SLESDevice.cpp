@@ -17,7 +17,6 @@ SLESDevice::SLESDevice()
     abortRequest = 1;
     pauseRequest = 0;
     flushRequest = 0;
-    audioThread = NULL;
     updateVolume = false;
 }
 
@@ -56,11 +55,8 @@ void SLESDevice::start()
     {
         abortRequest = 0;
         pauseRequest = 0;
-        if (!audioThread)
-        {
-            audioThread = new Thread(this, Priority_High);
-            audioThread->start();
-        }
+
+        audioThread = std::thread(&SLESDevice::run, this);
     }
     else
     {
@@ -74,13 +70,7 @@ void SLESDevice::stop()
     abortRequest = 1;
     mCondition.signal();
     mMutex.unlock();
-
-    if (audioThread)
-    {
-        audioThread->join();
-        delete audioThread;
-        audioThread = NULL;
-    }
+    audioThread.join();
 }
 
 void SLESDevice::pause()

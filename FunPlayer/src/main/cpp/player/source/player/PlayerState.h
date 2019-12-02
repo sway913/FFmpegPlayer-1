@@ -1,10 +1,11 @@
 #ifndef PLAYERSTATE_H
 #define PLAYERSTATE_H
 
+#include <iostream>
+#include <thread>
+
 #include <Mutex.h>
 #include <Condition.h>
-#include <Thread.h>
-
 #include <common/FFmpegUtils.h>
 
 extern "C" {

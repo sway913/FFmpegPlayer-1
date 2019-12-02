@@ -28,7 +28,7 @@ public:
 
     void setStereoVolume(float left_volume, float right_volume) override;
 
-    virtual void run();
+    void run();
 
 private:
     // 转换成SL采样率
@@ -63,7 +63,7 @@ private:
 
     Mutex mMutex;
     Condition mCondition;
-    Thread *audioThread;                // 音频播放线程
+    std::thread audioThread;            // 音频播放线程
     int abortRequest;                   // 终止标志
     int pauseRequest;                   // 暂停标志
     int flushRequest;                   // 刷新标志

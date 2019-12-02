@@ -11,7 +11,7 @@
 /**
  * 视频同步器
  */
-class MediaSync : public Runnable
+class MediaSync
 {
 
 public:
@@ -45,7 +45,7 @@ public:
 
     double getMasterClock();
 
-    void run() override;
+    void run();
 
     MediaClock *getAudioClock();
 
@@ -78,7 +78,7 @@ private:
 
     Mutex mMutex;
     Condition mCondition;
-    Thread *syncThread;                     // 同步线程
+    std::thread syncThread;                 // 同步线程
 
     int forceRefresh;                       // 强制刷新标志
     double maxFrameDuration;                // 最大帧延时

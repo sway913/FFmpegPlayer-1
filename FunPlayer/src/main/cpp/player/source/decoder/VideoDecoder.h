@@ -41,7 +41,7 @@ private:
     int mRotate;                    // 旋转角度
 
     bool mExit;                     // 退出标志
-    Thread *decodeThread;           // 解码线程
+    std::thread decodeThread;       // 解码线程
     MediaClock *masterClock;        // 主时钟
 };
 

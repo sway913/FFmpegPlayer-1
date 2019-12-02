@@ -11,7 +11,6 @@ MediaSync::MediaSync(PlayerState *playerState)
 
     mExit = true;
     abortRequest = true;
-    syncThread = NULL;
 
     forceRefresh = 0;
     maxFrameDuration = 10.0;
@@ -65,10 +64,9 @@ void MediaSync::start(VideoDecoder *videoDecoder, AudioDecoder *audioDecoder)
     mExit = false;
     mCondition.signal();
     mMutex.unlock();
-    if (videoDecoder && !syncThread)
+    if (videoDecoder)
     {
-        syncThread = new Thread(this);
-        syncThread->start();
+        syncThread = std::thread(&MediaSync::run, this);
     }
 }
 
@@ -85,12 +83,7 @@ void MediaSync::stop()
         mCondition.wait(mMutex);
     }
     mMutex.unlock();
-    if (syncThread)
-    {
-        syncThread->join();
-        delete syncThread;
-        syncThread = NULL;
-    }
+    syncThread.join();
 }
 
 void MediaSync::setVideoDevice(VideoDevice *device)

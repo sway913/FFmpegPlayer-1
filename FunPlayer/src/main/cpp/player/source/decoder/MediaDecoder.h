@@ -6,7 +6,7 @@
 #include <queue/PacketQueue.h>
 #include <queue/FrameQueue.h>
 
-class MediaDecoder : public Runnable
+class MediaDecoder
 {
 public:
     MediaDecoder(AVCodecContext *avctx, AVStream *stream, int streamIndex,

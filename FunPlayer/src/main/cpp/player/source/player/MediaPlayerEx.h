@@ -21,9 +21,9 @@
 #include <android/native_window_jni.h>
 #include <sync/MediaSync.h>
 #include <convertor/AudioResampler.h>
+#include <thread>
 
-
-class MediaPlayerEx : public Runnable
+class MediaPlayerEx
 {
 public:
     MediaPlayerEx();
@@ -83,7 +83,7 @@ public:
     void pcmQueueCallback(uint8_t *stream, int len);
 
 protected:
-    void run() override;
+    void run();
 
 private:
     int readPackets();
@@ -96,28 +96,23 @@ private:
                         int wanted_sample_rate);
 
 private:
-    Mutex mMutex;
-    Condition mCondition;
-    Thread *readThread;                     // 读数据包线程
-
-    PlayerState *playerState;               // 播放器状态
-
-    AudioDecoder *audioDecoder;             // 音频解码器
-    VideoDecoder *videoDecoder;             // 视频解码器
-    bool mExit;                             // state for reading packets thread exited if not
-
+    Mutex               mMutex;
+    Condition           mCondition;
+    std::thread         mThread;                    // 读数据包线程
+    PlayerState*        playerState;                // 播放器状态
+    AudioDecoder*       audioDecoder;               // 音频解码器
+    VideoDecoder*       videoDecoder;               // 视频解码器
+    bool                mExit;                      // state for reading packets thread exited if not
     // 解复用处理
-    AVFormatContext *pFormatCtx;            // 解码上下文
-    int64_t mDuration;                      // 文件总时长
-    int lastPaused;                         // 上一次暂停状态
-    int eof;                                // 数据包读到结尾标志
-    int attachmentRequest;                  // 视频封面数据包请求
+    AVFormatContext*    pFormatCtx;                 // 解码上下文
+    int64_t             mDuration;                  // 文件总时长
+    int                 lastPaused;                 // 上一次暂停状态
+    int                 eof;                        // 数据包读到结尾标志
+    int                 attachmentRequest;          // 视频封面数据包请求
 
-    AudioDevice *audioDevice;               // 音频输出设备
-    AudioResampler *audioResampler;         // 音频重采样器
-
-    MediaSync *mediaSync;                   // 媒体同步器
-
+    AudioDevice*        audioDevice;                // 音频输出设备
+    AudioResampler*     audioResampler;             // 音频重采样器
+    MediaSync*          mediaSync;                  // 媒体同步器
 };
 
 #endif //MEDIAPLAYER_H

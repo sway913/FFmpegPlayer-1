@@ -1,6 +1,5 @@
 #include <player/AVMessageQueue.h>
 #include "MediaPlayerControl.h"
-#include "JniHelper.h"
 
 MediaPlayerControl::MediaPlayerControl():
         mVideoDevice(nullptr),

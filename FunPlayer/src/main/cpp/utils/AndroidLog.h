@@ -21,4 +21,9 @@
 #define ALOGV(format, ...) {}
 #endif
 
+#define SAFE_DELETE(x) 	            { if (x) { delete x; x = NULL; } }
+#define	SAFE_FREE(p)				{ if (p) { free((p)); (p) = NULL; } }
+#define	SAFE_DELETE_ARRAY(p)		{ if (p) { delete [](p); (p) = NULL; } }
+#define	NUM_ARRAY_ELEMENTS(p)		{ ((int) sizeof(p) / sizeof(p[0])) }
+
 #endif //NATIVE_LOG_H

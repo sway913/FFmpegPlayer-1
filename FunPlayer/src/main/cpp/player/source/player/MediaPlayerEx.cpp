@@ -91,6 +91,7 @@ MediaPlayerEx::~MediaPlayerEx()
 status_t MediaPlayerEx::reset()
 {
     stop();
+
     if (mediaSync)
     {
         mediaSync->reset();
@@ -115,22 +116,18 @@ status_t MediaPlayerEx::reset()
         delete audioDevice;
         audioDevice = NULL;
     }
-    if (audioResampler)
-    {
-        delete audioResampler;
-        audioResampler = NULL;
-    }
+
+    SAFE_DELETE(audioResampler);
+
     if (pFormatCtx != NULL)
     {
         avformat_close_input(&pFormatCtx);
         avformat_free_context(pFormatCtx);
         pFormatCtx = NULL;
     }
-    if (playerState)
-    {
-        delete playerState;
-        playerState = NULL;
-    }
+
+    SAFE_DELETE(playerState);
+
     return NO_ERROR;
 }
 
